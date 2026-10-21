@@ -1,0 +1,173 @@
+.game-container {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.game-container canvas {
+    display: block;
+    width: min(960px, 100%);
+    height: auto;
+    background: black;
+    border: 2px solid white;
+    image-rendering: pixelated;
+}
+
+
+.hit-game {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 20px;
+    background: #000;
+    color: #fff;
+    font-family: "Determination", monospace;
+}
+
+.hit-game h1 {
+    margin: 0;
+}
+
+.hit-game canvas {
+    display: block;
+    width: min(640px, 100%);
+    height: auto;
+    border: 2px solid #fff;
+    image-rendering: pixelated;
+}
+
+.hit-game button {
+    padding: 10px 20px;
+    color: #000;
+    background: #fff;
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+
+.show-screen {
+    min-height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 22px;
+    padding: 24px;
+    overflow: hidden;
+    text-align: center;
+    color: white;
+    background: #080610;
+    font-family: "Determination", monospace;
+}
+
+.show-screen h1 {
+    margin: 0;
+    font-size: clamp(32px, 7vw, 64px);
+    text-shadow: 4px 4px #7e245e;
+    animation: show-pop 0.45s ease-out;
+}
+
+.show-screen p {
+    margin: 0;
+    font-size: 18px;
+}
+
+.show-screen .show-small {
+    color: #ffdd55;
+    letter-spacing: 4px;
+}
+
+.show-screen button {
+    padding: 14px 28px;
+    border: 3px solid white;
+    color: white;
+    background: #702858;
+    font: inherit;
+    font-size: 22px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.12s;
+}
+
+.show-screen button:hover {
+    background: #a53c79;
+    transform: scale(1.06);
+}
+
+.show-playing {
+    min-height: 100vh;
+    background: black;
+}
+
+.show-hud {
+    position: fixed;
+    z-index: 10;
+    top: 8px;
+    left: 8px;
+    right: 8px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 2px solid white;
+    color: white;
+    background: rgba(8, 6, 16, 0.92);
+    font-family: "Determination", monospace;
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.transition-screen {
+    animation: signal-flash 0.25s steps(2, end) 3;
+}
+
+.signal-bar {
+    width: min(420px, 80%);
+    height: 8px;
+    background: white;
+    animation: signal-load 1.5s linear;
+    transform-origin: left;
+}
+
+@keyframes show-pop {
+    from {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes signal-flash {
+    0%, 100% {
+        background: #080610;
+    }
+    50% {
+        background: #702858;
+    }
+}
+
+@keyframes signal-load {
+    from {
+        transform: scaleX(0);
+    }
+    to {
+        transform: scaleX(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .show-screen h1,
+    .transition-screen,
+    .signal-bar {
+        animation: none;
+    }
+}

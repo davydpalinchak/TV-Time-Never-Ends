@@ -1,0 +1,23 @@
+@font-face {
+    font-family: "Determination";
+    src: url("/assets/Determination-Regular.otf") format("opentype");
+}
+
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+    margin: 0;
+    min-width: 320px;
+    min-height: 100%;
+}
+
+body {
+    background: black;
+    color: white;
+    font-family: "Determination", monospace;
+}
