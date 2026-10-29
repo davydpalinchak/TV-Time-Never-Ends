@@ -39,11 +39,9 @@ export default function RhythmGame() {
             ctx.fillStyle = "#17152b";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Лінія, де треба натискати
             ctx.fillStyle = "#ffffff";
             ctx.fillRect(0, HIT_LINE_Y, canvas.width, 4);
 
-            // Ноти
             for (const note of game.notes) {
                 if (note.resolved) continue;
 
@@ -93,6 +91,7 @@ export default function RhythmGame() {
                         game.message = "Пропущена нота! -1";
                         setScore(game.score);
                         setMessage(game.message);
+                        window.dispatchEvent(new CustomEvent("tv-penalty"));
                     }
                 }
 
@@ -135,6 +134,7 @@ export default function RhythmGame() {
             } else {
                 game.score -= 1;
                 game.message = "Не в ритм! -1";
+                window.dispatchEvent(new CustomEvent("tv-penalty"));
             }
 
             setScore(game.score);

@@ -6,10 +6,7 @@ export function isWall(x, y) {
     const tileY = Math.floor(y / TILE_SIZE);
 
     if (
-        tileX < 0 ||
-        tileY < 0 ||
-        tileY >= gameMap.length ||
-        tileX >= gameMap[tileY].length
+        tileX < 0 || tileY < 0 || tileY >= gameMap.length || tileX >= gameMap[tileY].length
     ) {
         return true;
     }
