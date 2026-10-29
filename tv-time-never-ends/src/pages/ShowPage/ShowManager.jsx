@@ -107,13 +107,13 @@ function WhiteNoise({ opacity = 1 }) {
 export default function ShowManager() {
     const audioRef = useRef(null);
     const impactTriggeredRef = useRef(false);
-    const lastRoundRef = useRef(1);
+    const roundRef = useRef(1);
 
     const [elapsed, setElapsed] = useState(0);
     const [started, setStarted] = useState(false);
     const [finished, setFinished] = useState(false);
     const [shaking, setShaking] = useState(false);
-    const [penaltyRound, setPenaltyRound] = useState(false);
+    const [penaltyRound, setPenaltyRound] = useState(null);
     const [sequence, setSequence] = useState(() => createSequence(40));
 
     async function startShow() {
@@ -123,10 +123,10 @@ export default function ShowManager() {
         audio.pause();
         audio.currentTime = 0;
         impactTriggeredRef.current = false;
-        lastRoundRef.current = 1;
+        roundRef.current = 1;
 
         setElapsed(0);
-        setPenaltyRound(false);
+        setPenaltyRound(null);
         setSequence(createSequence(40));
         setFinished(false);
         setStarted(true);
@@ -144,7 +144,7 @@ export default function ShowManager() {
 
     useEffect(() => {
         function handlePenalty() {
-            setPenaltyRound(true);
+            setPenaltyRound(roundRef.current);
         }
 
         window.addEventListener("tv-penalty", handlePenalty);
@@ -204,7 +204,7 @@ export default function ShowManager() {
         setFinished(true);
     }
 
-    let phase = "intro";
+    let phase;
 
     if (finished) {
         phase = "results";
@@ -226,12 +226,11 @@ export default function ShowManager() {
         Math.floor(roundsElapsed / SHOW.roundDuration) + 1
     );
 
-    if (round !== lastRoundRef.current) {
-        lastRoundRef.current = round;
-        if (penaltyRound) {
-            setPenaltyRound(false);
-        }
-    }
+    useEffect(() => {
+        roundRef.current = round;
+    }, [round]);
+
+    const isPenaltyActive = penaltyRound === round;
 
     const roundTime = roundsElapsed % SHOW.roundDuration;
     const gameIndex = sequence[round - 1] ?? 0;
@@ -244,7 +243,7 @@ export default function ShowManager() {
         sequence[(SHOW.regularRounds + finaleSlot) % sequence.length] ?? 0;
     const FinaleGame = GAMES[finaleGameIndex]?.Component;
 
-    let tvClass = "tv-hidden-top";
+    let tvClass;
     if (phase === "intro") {
         if (elapsed < 1.0) {
             tvClass = "tv-hidden-top";
@@ -279,7 +278,7 @@ export default function ShowManager() {
 
     const cyclicTenna =
         STAGE_TENNAS[(round + Math.floor(elapsed / 3)) % STAGE_TENNAS.length];
-    const activeStageTenna = penaltyRound ? "tenna4.gif" : cyclicTenna;
+    const activeStageTenna = isPenaltyActive ? "tenna4.gif" : cyclicTenna;
 
     return (
         <main className="show-root">
