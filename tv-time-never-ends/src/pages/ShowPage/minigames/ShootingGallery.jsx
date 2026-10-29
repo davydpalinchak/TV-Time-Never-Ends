@@ -36,11 +36,9 @@ export default function ShootingGallery() {
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Тимчасовий фон
             ctx.fillStyle = "#202020";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Мішені
             for (const target of game.targets) {
                 if (!target.alive) continue;
 
@@ -52,7 +50,6 @@ export default function ShootingGallery() {
                 ctx.fillRect(target.x + 4, target.y - 12, 5, 5);
             }
 
-            // Інтерфейс
             ctx.fillStyle = "#ffffff";
             ctx.font = "18px monospace";
             ctx.fillText(`SCORE: ${game.score}`, 15, 25);
@@ -136,6 +133,7 @@ export default function ShootingGallery() {
             if (target.good) {
                 game.score -= 3;
                 game.message = "Це була хороша ціль! -3";
+                window.dispatchEvent(new CustomEvent("tv-penalty"));
             } else {
                 game.score += 2;
                 game.message = "Влучання! +2";

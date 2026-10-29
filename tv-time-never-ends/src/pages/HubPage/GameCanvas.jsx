@@ -1,12 +1,28 @@
-import { useEffect, useRef } from "react";
-import { player, SPRITE } from "../game/player";
-import { canMoveTo } from "../game/collisions";
-import { TILE, TILE_SIZE, gameMap } from "../game/map";
-import { createDialogue } from "../game/dialogue";
-import { dialogues } from "../game/dialogues";
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { player, SPRITE } from "./game/player";
+import { canMoveTo } from "./game/collisions";
+import { TILE, TILE_SIZE, gameMap } from "./game/map";
+import { createDialogue } from "./game/dialogue";
+import { dialogues } from "./game/dialogues";
 
 export default function GameCanvas() {
     const canvasRef = useRef(null);
+    const navigate = useNavigate();
+
+    const [showTenna7, setShowTenna7] = useState(false);
+    const [isBlackScreen, setIsBlackScreen] = useState(false);
+
+    const showTenna7Ref = useRef(false);
+    const isBlackScreenRef = useRef(false);
+
+    useEffect(() => {
+        showTenna7Ref.current = showTenna7;
+    }, [showTenna7]);
+
+    useEffect(() => {
+        isBlackScreenRef.current = isBlackScreen;
+    }, [isBlackScreen]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -15,7 +31,6 @@ export default function GameCanvas() {
         canvas.width = 960;
         canvas.height = 700;
         ctx.imageSmoothingEnabled = false;
-
 
         const background = new Image();
         background.src = `${import.meta.env.BASE_URL}assets/hub.png`;
@@ -36,9 +51,9 @@ export default function GameCanvas() {
 
         function startMusic() {
             if (musicStarted) return;
-                musicStarted = true;
+            musicStarted = true;
             music.play().catch((error) => {
-            console.log("Не вдалося запустити музику:", error);
+                console.log("Не вдалося запустити музику:", error);
             });
         }
 
@@ -54,8 +69,72 @@ export default function GameCanvas() {
         let lastTime = 0;
         let tennaTime = 0;
 
+        let cutsceneTriggered = false;
+
+        function triggerMainDoorCutscene() {
+            if (cutsceneTriggered) return;
+            cutsceneTriggered = true;
+
+            keys.ArrowUp = false;
+            keys.ArrowDown = false;
+            keys.ArrowLeft = false;
+            keys.ArrowRight = false;
+            keys.run = false;
+            player.isMoving = false;
+            player.facing = "up";
+            player.frameY = 3;
+            player.frameX = 0;
+
+            setShowTenna7(true);
+
+            const mainDialogue = dialogues.mainDoor;
+            dialogue.start(mainDialogue.lines, mainDialogue.voice, () => {
+                setIsBlackScreen(true);
+
+                music.pause();
+                music.currentTime = 0;
+
+                const lockerSound = new Audio(`${import.meta.env.BASE_URL}assets/sfx/snd_locker.wav`);
+                lockerSound.volume = 0.85;
+                lockerSound.play().catch((err) => {
+                    console.log("Locker sound error:", err);
+                });
+
+                let transitioned = false;
+                const goToShow = () => {
+                    if (transitioned) return;
+                    transitioned = true;
+                    cancelAnimationFrame(animationId);
+                    navigate("/show");
+                };
+
+                lockerSound.onended = goToShow;
+                setTimeout(goToShow, 1000);
+            });
+        }
+
+        function checkDoorTrigger() {
+            if (cutsceneTriggered) return;
+
+            const hitboxX = player.x + (SPRITE.drawWidth - player.hitboxWidth) / 2;
+            const hitboxY = player.y + SPRITE.drawHeight - player.hitboxHeight;
+            const hitboxCenterX = hitboxX + player.hitboxWidth / 2;
+            const hitboxTop = hitboxY;
+
+            const tileX = Math.floor(hitboxCenterX / TILE_SIZE);
+            const tileY = Math.floor(hitboxTop / TILE_SIZE);
+
+            const atMainDoorTile = tileY <= 3 && tileX >= 9 && tileX <= 11;
+            const approachingMainDoor = hitboxTop <= 258 && hitboxCenterX >= 570 && hitboxCenterX <= 768;
+
+            if (atMainDoorTile || approachingMainDoor) {
+                triggerMainDoorCutscene();
+            }
+        }
 
         function interact() {
+            if (cutsceneTriggered) return;
+
             const hitboxX =
                 player.x + (SPRITE.drawWidth - player.hitboxWidth) / 2;
 
@@ -105,42 +184,42 @@ export default function GameCanvas() {
             }
         }
 
-
-
         function handleKeyDown(e) {
             if (!musicStarted) {
                 startMusic();
             }
+
             if (e.code === "KeyZ" && !e.repeat) {
                 e.preventDefault();
 
                 if (dialogue.isActive()) {
                     dialogue.next();
-                } else {
+                } else if (!cutsceneTriggered) {
                     interact();
                 }
 
                 return;
             }
+
             if (e.code === "KeyX" && !e.repeat) {
                 e.preventDefault();
 
                 if (dialogue.isActive()) {
                     dialogue.skip();
-                } else {
+                } else if (!cutsceneTriggered) {
                     keys.run = true;
                 }
 
                 return;
             }
 
+            if (cutsceneTriggered) return;
+
             if (e.key in keys) {
                 keys[e.key] = true;
                 e.preventDefault();
             }
         }
-
-
 
         function handleKeyUp(e) {
             if (e.key in keys) keys[e.key] = false;
@@ -151,7 +230,7 @@ export default function GameCanvas() {
         window.addEventListener("keyup", handleKeyUp);
 
         function update(frameScale) {
-            if (dialogue.isActive()) return;
+            if (dialogue.isActive() || cutsceneTriggered) return;
 
             player.isMoving = false;
 
@@ -203,6 +282,8 @@ export default function GameCanvas() {
                 player.frameTimer = 0;
                 player.frameX = (player.frameX + 1) % 4;
             }
+
+            checkDoorTrigger();
         }
 
         function drawPlayer() {
@@ -222,6 +303,8 @@ export default function GameCanvas() {
         }
 
         function drawTenna() {
+            if (showTenna7Ref.current) return;
+
             if (!tennaImage.complete || !tennaImage.naturalWidth) return;
 
             const x = 730;
@@ -261,13 +344,47 @@ export default function GameCanvas() {
         }
 
         animationId = requestAnimationFrame(animate);
-
+        
         return () => {
+            music.pause();
             cancelAnimationFrame(animationId);
             window.removeEventListener("keydown", handleKeyDown);
             window.removeEventListener("keyup", handleKeyUp);
         };
-    }, []);
+    }, [navigate]);
 
-    return <canvas ref={canvasRef} width={960} height={700} />;
+    return (
+        <div className="canvas-wrapper" style={{ position: "relative" }}>
+            <canvas ref={canvasRef} width={960} height={700} />
+
+            {showTenna7 && (
+                <img
+                    src={`${import.meta.env.BASE_URL}assets/tenna7.gif`}
+                    alt="Tenna Active"
+                    style={{
+                        position: "absolute",
+                        left: `${(652 / 960) * 100}%`,
+                        top: `${(71 / 700) * 100}%`,
+                        width: `${(297 / 960) * 100}%`,
+                        height: `${(350 / 700) * 100}%`,
+                        pointerEvents: "none",
+                        imageRendering: "pixelated",
+                        zIndex: 2,
+                    }}
+                />
+            )}
+
+            {isBlackScreen && (
+                <div
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        backgroundColor: "#000000",
+                        zIndex: 99,
+                        pointerEvents: "none",
+                    }}
+                />
+            )}
+        </div>
+    );
 }

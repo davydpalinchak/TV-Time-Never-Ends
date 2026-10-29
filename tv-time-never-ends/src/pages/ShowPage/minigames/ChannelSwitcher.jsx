@@ -48,7 +48,6 @@ export default function ChannelSwitcher() {
                     game.score += 2;
                     setMessage("Правильний канал! +2");
 
-                    // Обираємо новий цільовий канал
                     let nextTarget;
                     do {
                         nextTarget =
@@ -60,6 +59,7 @@ export default function ChannelSwitcher() {
                 } else {
                     game.score -= 1;
                     setMessage("Не той канал! -1");
+                    window.dispatchEvent(new CustomEvent("tv-penalty"));
                 }
 
                 setScore(game.score);
@@ -114,7 +114,7 @@ export default function ChannelSwitcher() {
                     width: "min(640px, 100%)",
                     minHeight: "250px",
                     boxSizing: "border-box",
-                    border: "6px solid #aaa",
+                    border: "2px solid #fff",
                     background: "#17152b",
                     display: "flex",
                     flexDirection: "column",

@@ -8,6 +8,14 @@ export const dialogues = {
         ]
     },
 
+    mainDoor: {
+        voice: "tv",
+        lines: [
+            "* О-ХО-ХО! \n* Невже ти готовий до ГОЛОВНОГО ШОУ?!",
+            "* ЛЕДІ ТА ДЖЕНТЛЬМЕНИ! \n* ЧАС НАСТАВ!"
+        ]
+    },
+
     cactusApple: {
         voice: "default",
         lines: [
