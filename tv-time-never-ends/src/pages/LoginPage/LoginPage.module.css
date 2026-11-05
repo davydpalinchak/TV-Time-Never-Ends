@@ -106,6 +106,16 @@
     margin: 0 auto;
 }
 
+.auth-error {
+    padding: 8px 12px;
+    background: rgba(216, 27, 96, 0.25);
+    border: 2px solid #ff4d5e;
+    color: #ffeb3b;
+    text-align: center;
+    font-size: 15px;
+    letter-spacing: 1px;
+}
+
 .input-group {
     display: flex;
     flex-direction: column;
@@ -213,6 +223,8 @@
 }
 
 .instructions-image {
+    width: 640px;
+    height: 480px;
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;

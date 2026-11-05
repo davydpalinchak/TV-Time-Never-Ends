@@ -1,19 +1,25 @@
 import { useNavigate } from "react-router-dom";
-import "./LoginPage/LoginPage.css";
+import styles from "./LoginPage/LoginPage.module.css";
 
 export default function InstructionsPage() {
     const navigate = useNavigate();
 
     return (
-        <div className="login-container">
-            <div className="login-overlay" />
+        <div className={styles["login-container"]}>
+            <div className={styles["login-overlay"]} />
 
-            <div className="login-box-4-3 instructions-box">
-                <div className="instructions-content"></div>
+            <div className={`${styles["login-box-4-3"]} ${styles["instructions-box"]}`}>
+                <div className={styles["instructions-content"]}>
+                    <img
+                        className={styles["instructions-image"]}
+                        src={`${import.meta.env.BASE_URL}assets/instructions.png`}
+                        alt="Інструкція"
+                    />
+                </div>
 
                 <button
                     type="button"
-                    className="login-btn-secondary"
+                    className={styles["login-btn-secondary"]}
                     onClick={() => navigate("/")}
                 >
                     ПОВЕРНУТИСЬ ДО РЕЄСТРАЦІЇ

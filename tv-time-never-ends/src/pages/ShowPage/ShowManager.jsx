@@ -1,18 +1,20 @@
 import { useEffect, useRef, useState } from "react";
 import { SHOW } from "./showTimeLine";
+import { useAuth } from "../../hooks/useAuth";
+import { useScores } from "../../hooks/useScores";
 
 import HitTheBall from "./minigames/HitTheBall.jsx";
 import ShootingGallery from "./minigames/ShootingGallery.jsx";
 import RhythmGame from "./minigames/RhythmGame.jsx";
 import ChannelSwitcher from "./minigames/ChannelSwitcher.jsx";
 
-import "./ShowManager.css";
+import styles from "./ShowManager.module.css";
 
 const GAMES = [
-    { name: "HIT THE BALL", Component: HitTheBall },
-    { name: "SHOOTING GALLERY", Component: ShootingGallery },
-    { name: "RHYTHM GAME", Component: RhythmGame },
-    { name: "CHANNEL SWITCHER", Component: ChannelSwitcher },
+    { Component: HitTheBall, prompt: "ВДАРЬ М'ЯЧ!" },
+    { Component: ShootingGallery, prompt: "СТРІЛЯЙ В ПОГАНІ ЦІЛІ!" },
+    { Component: RhythmGame, prompt: "НАЖИМАЙ В ТАКТ!" },
+    { Component: ChannelSwitcher, prompt: "ПЕРЕКЛЮЧАЙ КАНАЛИ!" },
 ];
 
 const STAGE_TENNAS = ["tenna3.gif", "tenna6.gif", "tenna7.gif"];
@@ -98,7 +100,7 @@ function WhiteNoise({ opacity = 1 }) {
             ref={canvasRef}
             width={160}
             height={100}
-            className="white-noise-canvas"
+            className={styles["white-noise-canvas"]}
             style={{ opacity }}
         />
     );
@@ -107,13 +109,19 @@ function WhiteNoise({ opacity = 1 }) {
 export default function ShowManager() {
     const audioRef = useRef(null);
     const impactTriggeredRef = useRef(false);
-    const lastRoundRef = useRef(1);
+    const scoreSavedRef = useRef(false);
+    const roundRef = useRef(1);
+    const totalScoreRef = useRef(0);
+
+    const { user } = useAuth();
+    const { scores, saveScore } = useScores();
 
     const [elapsed, setElapsed] = useState(0);
     const [started, setStarted] = useState(false);
     const [finished, setFinished] = useState(false);
     const [shaking, setShaking] = useState(false);
-    const [penaltyRound, setPenaltyRound] = useState(false);
+    const [penaltyRound, setPenaltyRound] = useState(null);
+    const [totalScore, setTotalScore] = useState(0);
     const [sequence, setSequence] = useState(() => createSequence(40));
 
     async function startShow() {
@@ -123,10 +131,13 @@ export default function ShowManager() {
         audio.pause();
         audio.currentTime = 0;
         impactTriggeredRef.current = false;
-        lastRoundRef.current = 1;
+        scoreSavedRef.current = false;
+        roundRef.current = 1;
+        totalScoreRef.current = 0;
 
         setElapsed(0);
-        setPenaltyRound(false);
+        setTotalScore(0);
+        setPenaltyRound(null);
         setSequence(createSequence(40));
         setFinished(false);
         setStarted(true);
@@ -144,14 +155,29 @@ export default function ShowManager() {
 
     useEffect(() => {
         function handlePenalty() {
-            setPenaltyRound(true);
+            setPenaltyRound(roundRef.current);
+        }
+
+        function handleScore(event) {
+            const delta = Number(event.detail) || 0;
+            totalScoreRef.current += delta;
+            setTotalScore(totalScoreRef.current);
         }
 
         window.addEventListener("tv-penalty", handlePenalty);
+        window.addEventListener("tv-score", handleScore);
         return () => {
             window.removeEventListener("tv-penalty", handlePenalty);
+            window.removeEventListener("tv-score", handleScore);
         };
     }, []);
+
+    useEffect(() => {
+        if (finished && !scoreSavedRef.current) {
+            scoreSavedRef.current = true;
+            saveScore(user?.nickname || "KRIS", totalScoreRef.current);
+        }
+    }, [finished, saveScore, user]);
 
     useEffect(() => {
         if (!started) return;
@@ -204,7 +230,7 @@ export default function ShowManager() {
         setFinished(true);
     }
 
-    let phase = "intro";
+    let phase;
 
     if (finished) {
         phase = "results";
@@ -226,12 +252,11 @@ export default function ShowManager() {
         Math.floor(roundsElapsed / SHOW.roundDuration) + 1
     );
 
-    if (round !== lastRoundRef.current) {
-        lastRoundRef.current = round;
-        if (penaltyRound) {
-            setPenaltyRound(false);
-        }
-    }
+    useEffect(() => {
+        roundRef.current = round;
+    }, [round]);
+
+    const isPenaltyActive = penaltyRound === round;
 
     const roundTime = roundsElapsed % SHOW.roundDuration;
     const gameIndex = sequence[round - 1] ?? 0;
@@ -242,31 +267,31 @@ export default function ShowManager() {
         getFinaleSlotInfo(finaleElapsed);
     const finaleGameIndex =
         sequence[(SHOW.regularRounds + finaleSlot) % sequence.length] ?? 0;
-    const FinaleGame = GAMES[finaleGameIndex]?.Component;
+    const finaleGame = GAMES[finaleGameIndex];
 
-    let tvClass = "tv-hidden-top";
+    let tvClass;
     if (phase === "intro") {
         if (elapsed < 1.0) {
-            tvClass = "tv-hidden-top";
+            tvClass = styles["tv-hidden-top"];
         } else if (elapsed < 1.44) {
-            tvClass = "tv-impact";
+            tvClass = styles["tv-impact"];
         } else if (elapsed < 4.1) {
-            tvClass = "tv-dropped";
+            tvClass = styles["tv-dropped"];
         } else {
-            tvClass = "tv-zoomed";
+            tvClass = styles["tv-zoomed"];
         }
     } else if (phase === "rounds") {
         if (roundTime < SHOW.minigameDuration) {
-            tvClass = "tv-zoomed";
+            tvClass = styles["tv-zoomed"];
         } else if (roundTime < SHOW.roundDuration - 0.65) {
-            tvClass = "tv-dropped";
+            tvClass = styles["tv-dropped"];
         } else {
-            tvClass = "tv-zoomed";
+            tvClass = styles["tv-zoomed"];
         }
     } else if (phase === "finale") {
-        tvClass = "tv-zoomed";
+        tvClass = styles["tv-zoomed"];
     } else {
-        tvClass = "tv-dropped";
+        tvClass = styles["tv-dropped"];
     }
 
     const showGameFull =
@@ -279,10 +304,10 @@ export default function ShowManager() {
 
     const cyclicTenna =
         STAGE_TENNAS[(round + Math.floor(elapsed / 3)) % STAGE_TENNAS.length];
-    const activeStageTenna = penaltyRound ? "tenna4.gif" : cyclicTenna;
+    const activeStageTenna = isPenaltyActive ? "tenna4.gif" : cyclicTenna;
 
     return (
-        <main className="show-root">
+        <main className={styles["show-root"]}>
             <audio
                 ref={audioRef}
                 src={`${import.meta.env.BASE_URL}assets/sfx/tenna_battle.ogg`}
@@ -290,9 +315,11 @@ export default function ShowManager() {
                 onEnded={handleAudioEnded}
             />
 
-            <section className={`show-frame ${shaking ? "show-shake" : ""}`}>
-                <header className="show-header">
-                    <span>TV TIME NEVER ENDS</span>
+            <section className={`${styles["show-frame"]} ${shaking ? styles["show-shake"] : ""}`}>
+                <header className={styles["show-header"]}>
+                    <span>
+                        {user?.nickname ? `${user.nickname} | ` : ""}SCORE: {totalScore}
+                    </span>
                     <span>{formatTime(elapsed)} / 2:46</span>
                     <span>
                         {phase === "rounds"
@@ -305,36 +332,51 @@ export default function ShowManager() {
                     </span>
                 </header>
 
-                <div className="show-stage">
+                <div className={styles["show-stage"]}>
+                    <div className={styles["show-stage-backdrop"]}>
+                        <div className={styles["show-stage-backdrop-overlay"]} />
+                        <span className={styles["show-stage-round-num"]}>{round}</span>
+                    </div>
+
                     <img
-                        className="show-stage-bg"
+                        className={styles["show-stage-bg"]}
                         src={`${import.meta.env.BASE_URL}assets/tvtime.png`}
                         alt=""
                     />
 
                     <img
-                        className="show-tenna show-tenna-left"
+                        className={`${styles["show-tenna"]} ${styles["show-tenna-left"]}`}
                         src={`${import.meta.env.BASE_URL}assets/${activeStageTenna}`}
                         alt=""
                     />
 
                     <img
-                        className="show-tenna show-tenna-right"
+                        className={`${styles["show-tenna"]} ${styles["show-tenna-right"]}`}
                         src={`${import.meta.env.BASE_URL}assets/${activeStageTenna}`}
                         alt=""
                     />
 
+                    {phase === "intro" && elapsed >= 2.0 && elapsed < 4.0 && (
+                        <div className={styles["show-ready-prompt"]}>ГОТУЙСЯ!</div>
+                    )}
+
                     {showGameFull && (
-                        <div className="show-game-layer">
+                        <div className={styles["show-game-layer"]}>
                             {phase === "rounds" && currentGame && (
-                                <div className="show-game">
-                                    <currentGame.Component key={round} />
+                                <div className={styles["show-game"]} key={round}>
+                                    <currentGame.Component />
+                                    <div className={styles["minigame-prompt"]}>
+                                        {currentGame.prompt}
+                                    </div>
                                 </div>
                             )}
 
-                            {phase === "finale" && FinaleGame && (
-                                <div className="show-game">
-                                    <FinaleGame key={`finale-${finaleSlot}`} />
+                            {phase === "finale" && finaleGame && (
+                                <div
+                                    className={styles["show-game"]}
+                                    key={`finale-${finaleSlot}`}
+                                >
+                                    <finaleGame.Component />
                                 </div>
                             )}
 
@@ -343,13 +385,13 @@ export default function ShowManager() {
                     )}
 
                     {(phase === "intro" || phase === "rounds" || phase === "finale") && (
-                        <div className={`tv-assembly ${tvClass}`}>
-                            <div className="tv-inner-screen">
+                        <div className={`${styles["tv-assembly"]} ${tvClass}`}>
+                            <div className={styles["tv-inner-screen"]}>
                                 {!showGameFull && <WhiteNoise opacity={0.9} />}
                             </div>
 
                             <img
-                                className="tv-bezel-img"
+                                className={styles["tv-bezel-img"]}
                                 src={`${import.meta.env.BASE_URL}assets/tv.png`}
                                 alt=""
                             />
@@ -357,25 +399,45 @@ export default function ShowManager() {
                     )}
 
                     {phase === "boss" && (
-                        <div className="show-message boss-screen">
-                            <p className="show-label">SPECIAL BROADCAST</p>
+                        <div className={styles["show-message"]}>
+                            <p className={styles["show-label"]}>SPECIAL BROADCAST</p>
                             <h1>TENNAVIDUMICH</h1>
                             <p>THE BOSS BATTLE WILL BEGIN HERE.</p>
                         </div>
                     )}
 
                     {phase === "ending" && (
-                        <div className="show-message">
-                            <p className="show-label">BROADCAST ENDING</p>
+                        <div className={styles["show-message"]}>
+                            <p className={styles["show-label"]}>BROADCAST ENDING</p>
                             <h1>THANK YOU FOR WATCHING</h1>
                         </div>
                     )}
 
                     {phase === "results" && (
-                        <div className="show-message">
-                            <p className="show-label">BROADCAST ENDED</p>
+                        <div className={styles["show-message"]}>
+                            <p className={styles["show-label"]}>BROADCAST ENDED</p>
                             <h1>THAT'S THE SHOW!</h1>
-                            <p>FINAL TIME: {formatTime(elapsed)}</p>
+                            <p>
+                                ГРАВЕЦЬ: {user?.nickname || "KRIS"} | РАХУНОК: {totalScore}
+                            </p>
+
+                            <div className={styles["leaderboard"]}>
+                                <p className={styles["leaderboard-title"]}>
+                                    ТАБЛИЦЯ РЕКОРДІВ
+                                </p>
+                                {scores.slice(0, 5).map((item, idx) => (
+                                    <div
+                                        key={item.id || idx}
+                                        className={styles["leaderboard-row"]}
+                                    >
+                                        <span>
+                                            #{idx + 1} {item.nickname}
+                                        </span>
+                                        <span>{item.score} PTS</span>
+                                    </div>
+                                ))}
+                            </div>
+
                             <button onClick={startShow}>PLAY AGAIN</button>
                         </div>
                     )}

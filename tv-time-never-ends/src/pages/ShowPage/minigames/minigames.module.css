@@ -1,0 +1,143 @@
+.hit-game {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 16px;
+    background: #000;
+    color: #fff;
+    font-family: "Determination", monospace;
+    box-sizing: border-box;
+}
+
+.hit-game h1 {
+    margin: 0;
+    font-size: 32px;
+}
+
+.hit-game p {
+    margin: 0;
+}
+
+.hit-game canvas {
+    display: block;
+    width: min(720px, 92%);
+    height: auto;
+    max-height: 68%;
+    border: 2px solid #fff;
+    image-rendering: pixelated;
+    background: #000;
+}
+
+.hit-game button {
+    padding: 10px 20px;
+    color: #000;
+    background: #fff;
+    border: 0;
+    font: inherit;
+    cursor: pointer;
+}
+
+.baseball-arena {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #2e8b57;
+    font-family: "Determination", monospace;
+    color: #ffffff;
+    user-select: none;
+    image-rendering: pixelated;
+}
+
+.baseball-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 126%;
+    object-fit: fill;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
+.baseball-batter {
+    position: absolute;
+    left: 11.5%;
+    top: 54%;
+    width: 23%;
+    height: 27.3%;
+    object-fit: fill;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
+.baseball-ball {
+    position: absolute;
+    width: 5.5%;
+    height: 8.5%;
+    object-fit: contain;
+    image-rendering: pixelated;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+}
+
+.baseball-hud {
+    position: absolute;
+    top: 12px;
+    left: 16px;
+    font-size: 22px;
+    text-shadow: 2px 2px #000;
+    z-index: 3;
+}
+
+.baseball-message {
+    position: absolute;
+    bottom: 12px;
+    left: 16px;
+    font-size: 20px;
+    text-shadow: 2px 2px #000;
+    z-index: 3;
+}
+
+.baseball-over {
+    position: absolute;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.78);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    z-index: 5;
+}
+
+.baseball-over-title {
+    font-size: 32px;
+}
+
+.baseball-over-score {
+    font-size: 22px;
+}
+
+.channel-screen {
+    width: min(640px, 100%);
+    min-height: 250px;
+    box-sizing: border-box;
+    border: 2px solid #fff;
+    background: #17152b;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    text-align: center;
+}
+
+.channel-title {
+    font-size: 48px;
+    margin: 0;
+}

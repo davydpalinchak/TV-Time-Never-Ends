@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import styles from "./minigames.module.css";
 
 const ROUND_TIME = 7;
 const BALL_SPEED = 650;
@@ -65,6 +66,9 @@ export default function HitTheBall() {
                         state.score -= 1;
                         state.message = "Промах! -1 очко";
                         window.dispatchEvent(new CustomEvent("tv-penalty"));
+                        window.dispatchEvent(
+                            new CustomEvent("tv-score", { detail: -1 })
+                        );
                     }
                 } else if (state.hit) {
                     state.ballX += BALL_SPEED * 1.5 * delta;
@@ -116,7 +120,12 @@ export default function HitTheBall() {
         function handleKeyDown(event) {
             if (event.repeat || state.finished) return;
 
-            if (event.key.toLowerCase() === "z") {
+            const isActionKey =
+                event.code === "KeyZ" ||
+                event.code === "KeyX" ||
+                ["z", "x", "я", "ч", "х"].includes(event.key?.toLowerCase());
+
+            if (isActionKey) {
                 setSwinging(true);
                 setSwingKey((k) => k + 1);
                 if (swingTimeoutRef.current) {
@@ -136,6 +145,9 @@ export default function HitTheBall() {
                     state.score += 2;
                     state.message = "ВЛУЧАННЯ! +2 очки";
                     state.lastTime = 0;
+                    window.dispatchEvent(
+                        new CustomEvent("tv-score", { detail: 2 })
+                    );
                 }
             }
         }
@@ -153,48 +165,19 @@ export default function HitTheBall() {
     }, []);
 
     return (
-        <div
-            style={{
-                position: "relative",
-                width: "100%",
-                height: "100%",
-                overflow: "hidden",
-                backgroundColor: "#2e8b57",
-                fontFamily: '"Determination", monospace',
-                color: "#ffffff",
-                userSelect: "none",
-                imageRendering: "pixelated",
-            }}
-        >
+        <div className={styles["baseball-arena"]}>
             <img
                 src={`${import.meta.env.BASE_URL}assets/baseballbackground.png`}
                 alt=""
-                style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "126%",
-                    objectFit: "fill",
-                    imageRendering: "pixelated",
-                    pointerEvents: "none",
-                }}
+                className={styles["baseball-bg"]}
             />
 
             <canvas
                 ref={idleCanvasRef}
                 width={63}
                 height={50}
-                style={{
-                    position: "absolute",
-                    left: "11.5%",
-                    top: "54%",
-                    width: "23%",
-                    height: "27.3%",
-                    imageRendering: "pixelated",
-                    pointerEvents: "none",
-                    display: swinging ? "none" : "block",
-                }}
+                className={styles["baseball-batter"]}
+                style={{ display: swinging ? "none" : "block" }}
             />
 
             {swinging && (
@@ -202,16 +185,7 @@ export default function HitTheBall() {
                     key={swingKey}
                     src={`${import.meta.env.BASE_URL}assets/baseball.gif?s=${swingKey}`}
                     alt="Batter Swing"
-                    style={{
-                        position: "absolute",
-                        left: "11.5%",
-                        top: "54%",
-                        width: "23%",
-                        height: "27.3%",
-                        objectFit: "fill",
-                        imageRendering: "pixelated",
-                        pointerEvents: "none",
-                    }}
+                    className={styles["baseball-batter"]}
                 />
             )}
 
@@ -219,63 +193,29 @@ export default function HitTheBall() {
                 <img
                     src={`${import.meta.env.BASE_URL}assets/ball.gif`}
                     alt="Ball"
+                    className={styles["baseball-ball"]}
                     style={{
-                        position: "absolute",
                         left: `${(ballPos.x / 640) * 100}%`,
                         top: `${(ballPos.y / 320) * 100}%`,
-                        width: "5.5%",
-                        height: "8.5%",
-                        objectFit: "contain",
-                        imageRendering: "pixelated",
-                        pointerEvents: "none",
-                        transform: "translate(-50%, -50%)",
                     }}
                 />
             )}
 
-            <div
-                style={{
-                    position: "absolute",
-                    top: "12px",
-                    left: "16px",
-                    fontSize: "22px",
-                    textShadow: "2px 2px #000",
-                    zIndex: 3,
-                }}
-            >
+            <div className={styles["baseball-hud"]}>
                 <div>SCORE: {score}</div>
                 <div>TIME: {Math.ceil(timeLeft)}</div>
             </div>
 
-            <div
-                style={{
-                    position: "absolute",
-                    bottom: "12px",
-                    left: "16px",
-                    fontSize: "20px",
-                    textShadow: "2px 2px #000",
-                    zIndex: 3,
-                }}
-            >
-                {message}
-            </div>
+            <div className={styles["baseball-message"]}>{message}</div>
 
             {finished && (
-                <div
-                    style={{
-                        position: "absolute",
-                        inset: 0,
-                        backgroundColor: "rgba(0, 0, 0, 0.78)",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "10px",
-                        zIndex: 5,
-                    }}
-                >
-                    <div style={{ fontSize: "32px" }}>ROUND OVER</div>
-                    <div style={{ fontSize: "22px" }}>SCORE: {score}</div>
+                <div className={styles["baseball-over"]}>
+                    <div className={styles["baseball-over-title"]}>
+                        ROUND OVER
+                    </div>
+                    <div className={styles["baseball-over-score"]}>
+                        SCORE: {score}
+                    </div>
                 </div>
             )}
         </div>

@@ -5,6 +5,7 @@ import { canMoveTo } from "./game/collisions";
 import { TILE, TILE_SIZE, gameMap } from "./game/map";
 import { createDialogue } from "./game/dialogue";
 import { dialogues } from "./game/dialogues";
+import styles from "./HubPage.module.css";
 
 export default function GameCanvas() {
     const canvasRef = useRef(null);
@@ -14,15 +15,10 @@ export default function GameCanvas() {
     const [isBlackScreen, setIsBlackScreen] = useState(false);
 
     const showTenna7Ref = useRef(false);
-    const isBlackScreenRef = useRef(false);
 
     useEffect(() => {
         showTenna7Ref.current = showTenna7;
     }, [showTenna7]);
-
-    useEffect(() => {
-        isBlackScreenRef.current = isBlackScreen;
-    }, [isBlackScreen]);
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -189,7 +185,8 @@ export default function GameCanvas() {
                 startMusic();
             }
 
-            if (e.code === "KeyZ" && !e.repeat) {
+            const isZ = e.code === "KeyZ" || ["z", "я"].includes(e.key?.toLowerCase());
+            if (isZ && !e.repeat) {
                 e.preventDefault();
 
                 if (dialogue.isActive()) {
@@ -201,7 +198,8 @@ export default function GameCanvas() {
                 return;
             }
 
-            if (e.code === "KeyX" && !e.repeat) {
+            const isX = e.code === "KeyX" || ["x", "ч", "х"].includes(e.key?.toLowerCase());
+            if (isX && !e.repeat) {
                 e.preventDefault();
 
                 if (dialogue.isActive()) {
@@ -223,7 +221,8 @@ export default function GameCanvas() {
 
         function handleKeyUp(e) {
             if (e.key in keys) keys[e.key] = false;
-            if (e.code === "KeyX") keys.run = false;
+            const isXUp = e.code === "KeyX" || ["x", "ч", "х"].includes(e.key?.toLowerCase());
+            if (isXUp) keys.run = false;
         }
 
         window.addEventListener("keydown", handleKeyDown);
@@ -354,7 +353,7 @@ export default function GameCanvas() {
     }, [navigate]);
 
     return (
-        <div className="canvas-wrapper" style={{ position: "relative" }}>
+        <div className={styles["canvas-wrapper"]}>
             <canvas ref={canvasRef} width={960} height={700} />
 
             {showTenna7 && (

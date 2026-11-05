@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import styles from "./minigames.module.css";
 
 const ROUND_TIME = 7;
 
@@ -11,8 +12,6 @@ const START_TARGETS = [
 
 export default function ShootingGallery() {
     const canvasRef = useRef(null);
-    const [score, setScore] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(ROUND_TIME);
     const [message, setMessage] = useState("Стріляй у звичайні цілі!");
     const [finished, setFinished] = useState(false);
 
@@ -87,8 +86,6 @@ export default function ShootingGallery() {
                     timerAccumulator -= seconds;
                     game.timeLeft = Math.max(0, game.timeLeft - seconds);
 
-                    setTimeLeft(game.timeLeft);
-
                     if (game.timeLeft <= 0) {
                         game.finished = true;
                         setFinished(true);
@@ -134,12 +131,17 @@ export default function ShootingGallery() {
                 game.score -= 3;
                 game.message = "Це була хороша ціль! -3";
                 window.dispatchEvent(new CustomEvent("tv-penalty"));
+                window.dispatchEvent(
+                    new CustomEvent("tv-score", { detail: -3 })
+                );
             } else {
                 game.score += 2;
                 game.message = "Влучання! +2";
+                window.dispatchEvent(
+                    new CustomEvent("tv-score", { detail: 2 })
+                );
             }
 
-            setScore(game.score);
             setMessage(game.message);
             draw();
         }
@@ -162,14 +164,12 @@ export default function ShootingGallery() {
             message: "Стріляй у звичайні цілі!",
         };
 
-        setScore(0);
-        setTimeLeft(ROUND_TIME);
         setMessage("Стріляй у звичайні цілі!");
         setFinished(false);
     }
 
     return (
-        <main className="hit-game">
+        <main className={styles["hit-game"]}>
             <h1>SHOOTING GALLERY</h1>
 
             <canvas

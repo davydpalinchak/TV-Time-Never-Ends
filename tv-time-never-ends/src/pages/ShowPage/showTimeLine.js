@@ -1,5 +1,4 @@
 export const SHOW = {
-    musicStart: 0,
     roundsStart: 5,
     finaleStart: 111,
     bossStart: 138,
@@ -8,6 +7,5 @@ export const SHOW = {
 
     roundDuration: 9,
     minigameDuration: 7,
-    transitionDuration: 2,
     regularRounds: 11,
 };
