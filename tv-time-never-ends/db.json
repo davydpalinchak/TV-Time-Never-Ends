@@ -1,0 +1,28 @@
+{
+  "users": [
+    {
+      "id": 1793882215954,
+      "nickname": "nk",
+      "password": "mkdnf"
+    },
+    {
+      "id": 1793882915274,
+      "nickname": "kfd",
+      "password": "ljdfd"
+    }
+  ],
+  "scores": [
+    {
+      "id": 1,
+      "nickname": "TENNA",
+      "score": 24,
+      "date": "2026-11-05"
+    },
+    {
+      "id": 2,
+      "nickname": "KRIS",
+      "score": 18,
+      "date": "2026-11-05"
+    }
+  ]
+}

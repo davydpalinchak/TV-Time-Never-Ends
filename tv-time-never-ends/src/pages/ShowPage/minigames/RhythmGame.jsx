@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import styles from "./minigames.module.css";
 
 const ROUND_TIME = 7;
 const HIT_LINE_Y = 245;
@@ -7,8 +8,6 @@ const HIT_WINDOW = 22;
 
 export default function RhythmGame() {
     const canvasRef = useRef(null);
-    const [score, setScore] = useState(0);
-    const [timeLeft, setTimeLeft] = useState(ROUND_TIME);
     const [message, setMessage] = useState("Натискай Z у ритм!");
     const [finished, setFinished] = useState(false);
 
@@ -89,9 +88,11 @@ export default function RhythmGame() {
                         note.resolved = true;
                         game.score -= 1;
                         game.message = "Пропущена нота! -1";
-                        setScore(game.score);
                         setMessage(game.message);
                         window.dispatchEvent(new CustomEvent("tv-penalty"));
+                        window.dispatchEvent(
+                            new CustomEvent("tv-score", { detail: -1 })
+                        );
                     }
                 }
 
@@ -101,7 +102,6 @@ export default function RhythmGame() {
                     const seconds = Math.floor(timerAccumulator);
                     timerAccumulator -= seconds;
                     game.timeLeft = Math.max(0, game.timeLeft - seconds);
-                    setTimeLeft(game.timeLeft);
 
                     if (game.timeLeft <= 0) {
                         game.finished = true;
@@ -119,7 +119,11 @@ export default function RhythmGame() {
 
         function handleKeyDown(event) {
             if (event.repeat || game.finished) return;
-            if (event.key.toLowerCase() !== "z") return;
+            const isRhythmKey =
+                event.code === "KeyZ" ||
+                event.code === "KeyX" ||
+                ["z", "x", "я", "ч", "х"].includes(event.key?.toLowerCase());
+            if (!isRhythmKey) return;
 
             const note = game.notes.find(
                 (item) =>
@@ -131,13 +135,18 @@ export default function RhythmGame() {
                 note.resolved = true;
                 game.score += 2;
                 game.message = "В ритм! +2";
+                window.dispatchEvent(
+                    new CustomEvent("tv-score", { detail: 2 })
+                );
             } else {
                 game.score -= 1;
                 game.message = "Не в ритм! -1";
                 window.dispatchEvent(new CustomEvent("tv-penalty"));
+                window.dispatchEvent(
+                    new CustomEvent("tv-score", { detail: -1 })
+                );
             }
 
-            setScore(game.score);
             setMessage(game.message);
         }
 
@@ -164,14 +173,12 @@ export default function RhythmGame() {
             message: "Натискай Z у ритм!",
         };
 
-        setScore(0);
-        setTimeLeft(ROUND_TIME);
         setMessage("Натискай Z у ритм!");
         setFinished(false);
     }
 
     return (
-        <main className="hit-game">
+        <main className={styles["hit-game"]}>
             <h1>RHYTHM GAME</h1>
 
             <canvas

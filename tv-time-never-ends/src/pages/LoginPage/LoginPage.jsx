@@ -1,18 +1,34 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./LoginPage.css";
+import { useAuth } from "../../hooks/useAuth";
+import styles from "./LoginPage.module.css";
 
 export default function LoginPage() {
     const [mode, setMode] = useState("register");
     const [nickname, setNickname] = useState("");
     const [password, setPassword] = useState("");
+    const { register, login, loading, error, setError } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const switchMode = (newMode) => {
+        setMode(newMode);
+        setError("");
+    };
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
+        const success =
+            mode === "register"
+                ? await register(nickname, password)
+                : await login(nickname, password);
+
+        if (!success) return;
+
         try {
-            const enterSound = new Audio(`${import.meta.env.BASE_URL}assets/sfx/snd_ftext_enter.wav`);
+            const enterSound = new Audio(
+                `${import.meta.env.BASE_URL}assets/sfx/snd_ftext_enter.wav`
+            );
             enterSound.volume = 0.5;
             enterSound.play().catch(() => {});
         } catch (err) {
@@ -23,44 +39,46 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="login-container">
-            <div className="login-overlay" />
+        <div className={styles["login-container"]}>
+            <div className={styles["login-overlay"]} />
 
-            <div className="login-box-4-3">
-                <header className="login-header">
-                    <h1 className="login-title">TV Time Never Ends</h1>
-                    <p className="login-subtitle">
+            <div className={styles["login-box-4-3"]}>
+                <header className={styles["login-header"]}>
+                    <h1 className={styles["login-title"]}>TV Time Never Ends</h1>
+                    <p className={styles["login-subtitle"]}>
                         {mode === "register"
                             ? "реєстрація нового учасника"
                             : "вхід в акаунт учасника"}
                     </p>
                 </header>
 
-                <div className="auth-tabs">
+                <div className={styles["auth-tabs"]}>
                     <button
                         type="button"
-                        className={`auth-tab ${mode === "register" ? "active" : ""}`}
-                        onClick={() => setMode("register")}
+                        className={`${styles["auth-tab"]} ${mode === "register" ? styles.active : ""}`}
+                        onClick={() => switchMode("register")}
                     >
                         РЕЄСТРАЦІЯ
                     </button>
                     <button
                         type="button"
-                        className={`auth-tab ${mode === "login" ? "active" : ""}`}
-                        onClick={() => setMode("login")}
+                        className={`${styles["auth-tab"]} ${mode === "login" ? styles.active : ""}`}
+                        onClick={() => switchMode("login")}
                     >
                         ВХІД
                     </button>
                 </div>
 
-                <form className="login-form" onSubmit={handleSubmit}>
-                    <div className="input-group">
-                        <label className="input-label" htmlFor="nickname">
+                <form className={styles["login-form"]} onSubmit={handleSubmit}>
+                    {error && <div className={styles["auth-error"]}>{error}</div>}
+
+                    <div className={styles["input-group"]}>
+                        <label className={styles["input-label"]} htmlFor="nickname">
                             ▶ Нікнейм:
                         </label>
                         <input
                             id="nickname"
-                            className="login-input"
+                            className={styles["login-input"]}
                             type="text"
                             placeholder="Введіть ваш нік..."
                             value={nickname}
@@ -71,13 +89,13 @@ export default function LoginPage() {
                         />
                     </div>
 
-                    <div className="input-group">
-                        <label className="input-label" htmlFor="password">
+                    <div className={styles["input-group"]}>
+                        <label className={styles["input-label"]} htmlFor="password">
                             ▶ Пароль:
                         </label>
                         <input
                             id="password"
-                            className="login-input"
+                            className={styles["login-input"]}
                             type="password"
                             placeholder="Введіть пароль..."
                             value={password}
@@ -87,20 +105,28 @@ export default function LoginPage() {
                         />
                     </div>
 
-                    <button type="submit" className="login-btn">
-                        {mode === "register" ? "ЗАРЕЄСТРУВАТИСЬ І ПОЧАТИ" : "УВІЙТИ В ШОУ"}
-                    </button>
+                    <button
+                        type="submit"
+                        className={styles["login-btn"]}
+                        disabled={loading}
+                    >
+                        {loading
+                            ? "ЗАВАНТАЖЕННЯ..."
+                            : mode === "register"
+                              ? "ЗАРЕЄСТРУВАТИСЬ І ПОЧАТИ"
+                              : "УВІЙТИ В ШОУ"}
+                     </button>
 
                     <button
                         type="button"
-                        className="login-btn-secondary"
+                        className={styles["login-btn-secondary"]}
                         onClick={() => navigate("/instructions")}
                     >
                         ІНСТРУКЦІЯ
                     </button>
                 </form>
 
-                <footer className="login-footer"></footer>
+                <footer className={styles["login-footer"]}></footer>
             </div>
         </div>
     );

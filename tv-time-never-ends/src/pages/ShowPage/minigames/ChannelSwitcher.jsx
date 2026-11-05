@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import styles from "./minigames.module.css";
 
 const ROUND_TIME = 7;
 const CHANNEL_COUNT = 5;
@@ -43,10 +44,18 @@ export default function ChannelSwitcher() {
                 setChannel(game.channel);
             }
 
-            if (event.key.toLowerCase() === "z") {
+            const isConfirmKey =
+                event.code === "KeyZ" ||
+                event.code === "KeyX" ||
+                ["z", "x", "я", "ч", "х"].includes(event.key?.toLowerCase());
+
+            if (isConfirmKey) {
                 if (game.channel === game.target) {
                     game.score += 2;
                     setMessage("Правильний канал! +2");
+                    window.dispatchEvent(
+                        new CustomEvent("tv-score", { detail: 2 })
+                    );
 
                     let nextTarget;
                     do {
@@ -60,6 +69,9 @@ export default function ChannelSwitcher() {
                     game.score -= 1;
                     setMessage("Не той канал! -1");
                     window.dispatchEvent(new CustomEvent("tv-penalty"));
+                    window.dispatchEvent(
+                        new CustomEvent("tv-score", { detail: -1 })
+                    );
                 }
 
                 setScore(game.score);
@@ -104,29 +116,13 @@ export default function ChannelSwitcher() {
     }
 
     return (
-        <main className="hit-game">
+        <main className={styles["hit-game"]}>
             <h1>CHANNEL SWITCHER</h1>
 
             <p>Цільовий канал: {target}</p>
 
-            <section
-                style={{
-                    width: "min(640px, 100%)",
-                    minHeight: "250px",
-                    boxSizing: "border-box",
-                    border: "2px solid #fff",
-                    background: "#17152b",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "20px",
-                    textAlign: "center",
-                }}
-            >
-                <h2 style={{ fontSize: "48px", margin: 0 }}>
-                    📺 CH {channel}
-                </h2>
+            <section className={styles["channel-screen"]}>
+                <h2 className={styles["channel-title"]}>📺 CH {channel}</h2>
 
                 <p>{message}</p>
 
